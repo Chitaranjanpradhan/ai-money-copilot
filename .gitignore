@@ -42,3 +42,4 @@ next-env.d.ts
 
 # local demo state + env
 .data/
+!.env.example
