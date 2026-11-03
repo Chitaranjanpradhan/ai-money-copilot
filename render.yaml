@@ -1,0 +1,23 @@
+# Render Blueprint — deploy with: Render dashboard → New → Blueprint → this repo
+services:
+  - type: web
+    name: ai-money-copilot
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PAYPAL_API_BASE
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false # set in dashboard — sandbox app client ID
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false # set in dashboard — sandbox app secret
+      - key: PAYPAL_BUYER_EMAIL
+        sync: false # sandbox personal account email
+      # ANTHROPIC_API_KEY intentionally omitted on the public demo:
+      # anyone could spend your tokens. The app falls back to templates.
+      # APP_BASE_URL not needed — RENDER_EXTERNAL_URL is used automatically.

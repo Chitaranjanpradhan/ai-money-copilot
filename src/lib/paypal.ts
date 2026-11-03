@@ -5,6 +5,11 @@
 
 const BASE = process.env.PAYPAL_API_BASE ?? "https://api-m.sandbox.paypal.com";
 
+/** Public base URL of this app — explicit env, Render's injected URL, or localhost. */
+export function appBaseUrl(): string {
+  return process.env.APP_BASE_URL ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000";
+}
+
 let cached: { token: string; expiresAt: number } | null = null;
 
 export async function getAccessToken(): Promise<string> {
@@ -206,7 +211,7 @@ export async function createOrder(items: CartItem[], currency = "USD") {
   const total = items
     .reduce((s, i) => s + Number(i.unitAmount) * i.quantity, 0)
     .toFixed(2);
-  const appBase = process.env.APP_BASE_URL ?? "http://localhost:3000";
+  const appBase = appBaseUrl();
   const res = await pp<any>("/v2/checkout/orders", {
     method: "POST",
     headers: { "PayPal-Request-Id": `order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` },
@@ -296,7 +301,7 @@ export async function createPlan(productId: string, name: string, price: string,
 
 /** Create a subscription → returns approval link for the sandbox buyer. */
 export async function createSubscription(planId: string, subscriberEmail: string) {
-  const appBase = process.env.APP_BASE_URL ?? "http://localhost:3000";
+  const appBase = appBaseUrl();
   const res = await pp<any>("/v1/billing/subscriptions", {
     method: "POST",
     json: {
