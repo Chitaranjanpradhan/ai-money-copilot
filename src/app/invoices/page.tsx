@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import dynamic from "next/dynamic";
 import { Button, PageHeader, StatusChip, StatTile, Thinking, Typewriter } from "@/components/ui";
+
+const InvoiceGrid = dynamic(() => import("@/components/InvoiceGrid"), { ssr: false });
 
 interface Invoice {
   id: string;
@@ -33,6 +36,7 @@ export default function InvoicesPage() {
   const [seeding, setSeeding] = useState(false);
   const [running, setRunning] = useState(false);
   const [events, setEvents] = useState<AgentEvent[]>([]);
+  const [view, setView] = useState<"cards" | "grid">("cards");
   const prevPaid = useRef<number>(-1);
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -129,10 +133,27 @@ export default function InvoicesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Invoice list */}
         <div className="card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--ink-muted)] mb-4">
-            Invoices
-          </h2>
-          {loading ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+              Invoices
+            </h2>
+            <div className="flex rounded-full border border-[var(--hairline)] p-0.5 text-xs">
+              {(["cards", "grid"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    view === v ? "bg-[var(--accent)] text-white" : "text-[var(--ink-2)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  {v === "cards" ? "Cards" : "Grid"}
+                </button>
+              ))}
+            </div>
+          </div>
+          {view === "grid" && !loading ? (
+            <InvoiceGrid invoices={invoices} />
+          ) : loading ? (
             <Thinking label="Loading invoices from PayPal" />
           ) : invoices.length === 0 ? (
             <p className="text-sm text-[var(--ink-2)]">No invoices yet — hit “Seed demo invoices”.</p>

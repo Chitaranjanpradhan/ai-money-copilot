@@ -1,0 +1,153 @@
+{
+  "info": {
+    "name": "AI Money Copilot API",
+    "description": "API surface of AI Money Copilot (PayPal × Claude hackathon project).\n\nSet the `baseUrl` variable to your deployment:\n- Hosted demo: https://ai-money-copilot.onrender.com\n- Local: http://localhost:3000\n\nAll money is PayPal sandbox money.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "https://ai-money-copilot.onrender.com" }],
+  "item": [
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "List invoices (+ overdue count)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/invoices" }
+        },
+        {
+          "name": "Seed demo invoices",
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/invoices" }
+        },
+        {
+          "name": "Run invoice-chaser agent (streams NDJSON)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/chase",
+            "description": "Streams the agent run as newline-delimited JSON events: scan → scanned → found → draft → reminded → done."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shop (Chat-to-Checkout)",
+      "item": [
+        {
+          "name": "Get catalog",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/shop" }
+        },
+        {
+          "name": "Chat with the AI shopkeeper",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shop",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"chat\",\n  \"history\": [{ \"role\": \"user\", \"content\": \"wireless headphones for running\" }]\n}"
+            },
+            "description": "With CHANNEL3_API_KEY set server-side, returns real products from Channel3 search."
+          }
+        },
+        {
+          "name": "Buy catalog item (creates PayPal order)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shop",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"buy\",\n  \"itemName\": \"travel mug\",\n  \"quantity\": 1\n}"
+            },
+            "description": "Response includes approveUrl — open it and pay with a PayPal sandbox personal account."
+          }
+        },
+        {
+          "name": "Buy Channel3 product (creates PayPal order)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shop",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"buyProduct\",\n  \"productId\": \"<id from chat response>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Capture order (after buyer approval)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shop",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"capture\",\n  \"orderId\": \"<orderId from buy>\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "List tracked subscriptions + AI audit",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/subscriptions" }
+        },
+        {
+          "name": "Seed demo subscriptions",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/subscriptions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"action\": \"seed\" }" }
+          }
+        },
+        {
+          "name": "Cancel subscription",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/subscriptions",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"cancel\",\n  \"id\": \"<subscription id>\",\n  \"reason\": \"Cleaned up by AI auditor\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payouts",
+      "item": [
+        {
+          "name": "Roster + payout history",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/payouts" }
+        },
+        {
+          "name": "Compile payout rule with AI (no money moves)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/payouts",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"plan\",\n  \"rule\": \"pay everyone for approved tasks, cap at $90\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Execute approved payout batch",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/payouts",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"execute\",\n  \"rule\": \"cap 90\",\n  \"items\": [{ \"email\": \"sb-contractor1@personal.example.com\", \"amount\": \"90.00\", \"note\": \"Approved tasks\" }]\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

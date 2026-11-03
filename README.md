@@ -90,6 +90,8 @@ src/
 
 - **Render** — hosts the live demo (`render.yaml` blueprint in this repo)
 - **Channel3** — product-search API powering real-product mode in Chat-to-Checkout: the user describes what they want, Channel3 finds real products (images, prices, merchants), and PayPal Orders v2 checks them out
+- **AG Grid** — the Invoices page's "Grid" view: sortable/filterable data table over live PayPal invoice data, custom-themed to the app
+- **Postman** — import [`postman/ai-money-copilot.postman_collection.json`](postman/ai-money-copilot.postman_collection.json) to poke every API endpoint directly (pre-pointed at the live demo)
 
 ## License
 
