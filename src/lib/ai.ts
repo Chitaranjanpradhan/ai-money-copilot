@@ -58,10 +58,23 @@ export async function shopkeeperReply(opts: {
 }): Promise<{ text: string; via: "claude" | "template" }> {
   const catalogText = opts.catalog.map((c) => `- ${c.name} ($${c.price}): ${c.blurb}`).join("\n");
   if (!aiAvailable()) {
-    return {
-      text: "I'd recommend the first item in our catalog — it's our most popular! Say \"buy <item name>\" and I'll spin up a secure PayPal checkout for you.",
-      via: "template",
-    };
+    // Keyword-match the user's last message against the catalog
+    const last = opts.history.filter((m) => m.role === "user").at(-1)?.content.toLowerCase() ?? "";
+    const scored = opts.catalog
+      .map((c) => {
+        const hay = `${c.name} ${c.blurb}`.toLowerCase();
+        const score = last
+          .split(/\W+/)
+          .filter((w) => w.length > 2)
+          .reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+        return { c, score };
+      })
+      .sort((a, b) => b.score - a.score);
+    const hit = scored[0]?.score ? scored[0].c : null;
+    const text = hit
+      ? `The ${hit.name} ($${hit.price}) sounds perfect — ${hit.blurb.toLowerCase()}. Say "buy ${hit.name}" and I'll create a secure PayPal checkout right here.`
+      : `Here's what we have: ${opts.catalog.map((c) => `${c.name} ($${c.price})`).join(", ")}. Tell me what you're after, or say "buy <item name>" for an instant PayPal checkout.`;
+    return { text, via: "template" };
   }
   try {
     const { text } = await generateText({
