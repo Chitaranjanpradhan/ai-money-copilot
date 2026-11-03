@@ -3,6 +3,7 @@ import { createOrder, captureOrder, getOrder } from "@/lib/paypal";
 import { shopkeeperReply } from "@/lib/ai";
 import { updateStore } from "@/lib/store";
 import { CATALOG } from "@/lib/catalog";
+import { channel3Available, searchProducts, getProduct } from "@/lib/channel3";
 
 
 /**
@@ -15,8 +16,27 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     if (body.action === "chat") {
+      // Channel3 mode: search REAL products for the user's message
+      if (channel3Available()) {
+        const last = (body.history ?? []).filter((m: { role: string }) => m.role === "user").at(-1);
+        const products = await searchProducts(String(last?.content ?? ""), 6);
+        if (products.length) {
+          const reply = await shopkeeperReply({
+            history: body.history ?? [],
+            catalog: products.map((p) => ({ name: p.name, price: p.price, blurb: p.blurb })),
+          });
+          return NextResponse.json({ reply: reply.text, via: reply.via, products });
+        }
+      }
       const reply = await shopkeeperReply({ history: body.history ?? [], catalog: CATALOG });
       return NextResponse.json({ reply: reply.text, via: reply.via, catalog: CATALOG });
+    }
+    if (body.action === "buyProduct") {
+      // Channel3 product — re-fetch server-side so the price is authoritative
+      const p = await getProduct(String(body.productId));
+      if (!p) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      const order = await createOrder([{ name: p.name, quantity: 1, unitAmount: p.price }], p.currency);
+      return NextResponse.json({ ...order, item: p.name, quantity: 1 });
     }
     if (body.action === "buy") {
       const item = CATALOG.find((c) => c.name.toLowerCase().includes(String(body.itemName ?? "").toLowerCase()));

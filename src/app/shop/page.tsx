@@ -8,6 +8,18 @@ interface Msg {
   role: "user" | "assistant";
   content: string;
   checkout?: { approveUrl?: string; orderId: string; total: string; item: string; quantity: number };
+  products?: C3Product[];
+}
+
+interface C3Product {
+  id: string;
+  name: string;
+  price: string;
+  currency: string;
+  blurb: string;
+  imageUrl?: string;
+  brand?: string;
+  merchant?: string;
 }
 
 interface CatalogItem {
@@ -36,6 +48,32 @@ export default function ShopPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
+
+  const buyProduct = async (p: C3Product) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const d = await fetch("/api/shop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "buyProduct", productId: p.id }),
+      }).then((r) => r.json());
+      if (d.error) {
+        setMessages((m) => [...m, { role: "assistant", content: `Couldn't create the order: ${d.error}` }]);
+      } else {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: `Excellent taste! ${d.item} comes to $${d.total}. Your secure PayPal checkout is ready:`,
+            checkout: d,
+          },
+        ]);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -74,7 +112,10 @@ export default function ShopPage() {
             history: history.map(({ role, content }) => ({ role, content })),
           }),
         }).then((r) => r.json());
-        setMessages((m) => [...m, { role: "assistant", content: d.reply ?? d.error ?? "…" }]);
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", content: d.reply ?? d.error ?? "…", products: d.products },
+        ]);
       }
     } finally {
       setBusy(false);
@@ -113,6 +154,39 @@ export default function ShopPage() {
                       <Typewriter text={m.content} speed={10} />
                     ) : (
                       m.content
+                    )}
+                    {m.products && m.products.length > 0 && (
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {m.products.map((p, pi) => (
+                          <motion.div
+                            key={p.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 + pi * 0.1 }}
+                            className="rounded-xl bg-[var(--surface)] border border-[var(--hairline)] overflow-hidden"
+                          >
+                            {p.imageUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={p.imageUrl} alt={p.name} className="h-28 w-full object-cover" />
+                            )}
+                            <div className="p-3">
+                              <div className="text-xs font-medium leading-snug line-clamp-2">{p.name}</div>
+                              <div className="text-[10px] text-[var(--ink-muted)] mt-0.5">
+                                {p.brand ?? p.merchant} · via Channel3
+                              </div>
+                              <div className="mt-2 flex items-center justify-between">
+                                <span className="text-sm font-semibold text-[var(--aqua)]">${p.price}</span>
+                                <button
+                                  onClick={() => buyProduct(p)}
+                                  className="text-[11px] font-semibold bg-[var(--accent)] hover:bg-[#4a93ea] text-white rounded-full px-3 py-1 transition-colors"
+                                >
+                                  Buy
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
                     )}
                     {m.checkout && (
                       <motion.a

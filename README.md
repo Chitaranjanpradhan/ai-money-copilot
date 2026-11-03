@@ -17,7 +17,7 @@ Built for the **“Build What’s Next with PayPal and AI”** hackathon.
 | Module | What the AI does | PayPal API |
 |---|---|---|
 | 🧲 **Invoice Chaser** | Scans invoices, computes who's overdue (PayPal has no OVERDUE status — the agent owns that logic), drafts escalating follow-ups with Claude (friendly → firm → final), sends the official PayPal reminder, celebrates with confetti when paid | Invoicing v2 |
-| 🛍️ **Chat-to-Checkout** | An AI shopkeeper sells in conversation and mints a live PayPal checkout link right in the chat — the same agentic-commerce pattern PayPal is shipping with ChatGPT & Perplexity | Orders v2 |
+| 🛍️ **Chat-to-Checkout** | An AI shopkeeper sells in conversation and mints a live PayPal checkout link right in the chat — the same agentic-commerce pattern PayPal is shipping with ChatGPT & Perplexity. With a **Channel3** key it sells *real products* (live search, images, real prices from real merchants) | Orders v2 |
 | 🔍 **Subscription Auditor** | Keeps its own subscription ledger (there is no list-all API), pulls live status, and has Claude classify each as HEALTHY / AT_RISK / ZOMBIE — cleanup only on your click | Subscriptions v1 |
 | 💸 **Payout Manager** | Compiles a plain-English rule (“pay everyone for approved tasks, cap at $90”) into exact payout items; nothing moves until a human approves; then one Payouts batch pays everyone | Payouts v1 |
 
@@ -85,6 +85,11 @@ src/
 
 - **Claude (Anthropic)** — chase-message drafting, shopkeeper conversation, subscription audit verdicts, natural-language payout-rule compilation
 - Built with **Claude Code** as the pair programmer
+
+## Sponsor tools used
+
+- **Render** — hosts the live demo (`render.yaml` blueprint in this repo)
+- **Channel3** — product-search API powering real-product mode in Chat-to-Checkout: the user describes what they want, Channel3 finds real products (images, prices, merchants), and PayPal Orders v2 checks them out
 
 ## License
 
