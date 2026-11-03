@@ -5,6 +5,13 @@
 
 Built for the **“Build What’s Next with PayPal and AI”** hackathon.
 
+### 🌐 Live demo: **[ai-money-copilot.onrender.com](https://ai-money-copilot.onrender.com/)**
+
+> Hosted on Render (hackathon sponsor), free tier — first load may take ~50 s while the
+> service wakes up. All money is PayPal **sandbox** money; click around freely.
+> The hosted demo uses deterministic AI-fallback templates; run locally with an
+> `ANTHROPIC_API_KEY` to see live Claude drafting.
+
 ## The four modules
 
 | Module | What the AI does | PayPal API |
